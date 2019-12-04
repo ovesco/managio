@@ -1,21 +1,26 @@
 {
-   "name": "managio",
-   "version": "0.0.1",
-   "description": "Awesome project developed with TypeORM.",
-   "devDependencies": {
-      "@types/node": "^8.0.29",
-      "@typescript-eslint/eslint-plugin": "^2.9.0",
-      "eslint-config-airbnb-typescript": "^6.3.1",
-      "eslint-plugin-import": "^2.18.2",
-      "ts-node": "3.3.0",
-      "typescript": "3.3.3333"
-   },
-   "dependencies": {
-      "typeorm": "0.2.20",
-      "reflect-metadata": "^0.1.10",
-      "mysql": "^2.14.1"
-   },
-   "scripts": {
-      "start": "ts-node src/index.ts"
-   }
+  "name": "managio",
+  "version": "0.0.1",
+  "devDependencies": {
+    "@types/chai": "^4.2.5",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^8.0.29",
+    "@types/reflect-metadata": "^0.1.0",
+    "@typescript-eslint/eslint-plugin": "^2.9.0",
+    "chai": "^4.2.0",
+    "eslint-config-airbnb-typescript": "^6.3.1",
+    "eslint-plugin-import": "^2.18.2",
+    "mocha": "^6.2.2",
+    "ts-node": "^3.3.0",
+    "typescript": "^3.3"
+  },
+  "dependencies": {
+    "arangojs": "^6.12.0",
+    "class-transformer": "^0.2.3",
+    "reflect-metadata": "^0.1.13"
+  },
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "test": "mocha -r ts-node/register test/\\*\\*/\\*.spec.ts"
+  }
 }

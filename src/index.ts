@@ -1,21 +1,72 @@
-import "reflect-metadata";
-import {createConnection} from "typeorm";
-import {User} from "./entity/User";
+import 'reflect-metadata';
 
-createConnection().then(async connection => {
+import { document, column, edge } from './Decorators/ClassDecorators';
+import { ConnectionParameters, createConnection } from "./CreateConnection";
 
-    console.log("Inserting a new user into the database...");
-    const user = new User();
-    user.firstName = "Timber";
-    user.lastName = "Saw";
-    user.age = 25;
-    await connection.manager.save(user);
-    console.log("Saved a new user with id: " + user.id);
+@document("examples")
+class Example {
 
-    console.log("Loading users from the database...");
-    const users = await connection.manager.find(User);
-    console.log("Loaded users: ", users);
+  constructor(foo, bar, baz) {
+    this.foo = foo;
+    this.bar = bar;
+    this.baz = baz;
+  }
 
-    console.log("Here you can setup and run express/koa/any other framework.");
+  @column
+  private foo: number;
 
-}).catch(error => console.log(error));
+  @column
+  private bar: string;
+
+  @column
+  private baz: boolean;
+}
+
+@document("foos")
+class Foo {
+
+  @column
+  private swag: string;
+}
+
+@edge("fooexamples", Example, Foo)
+class FooExample {
+
+  @column
+  private yolo: number;
+}
+
+const config = {
+  database: 'mydb',
+  models: [Example, FooExample, Foo],
+  auth: {
+    type: 'basic',
+    username: 'root',
+    password: 'root',
+  }
+} as ConnectionParameters;
+
+createConnection(config).then(async (manager) => {
+  const e = new Example(10, 'yo', true);
+  console.log(manager.schema);
+  manager.persist(e);
+  await manager.flush();
+});
+
+/*
+class Bar {
+  constructor(public swag: string) {}
+}
+
+const bar = new Bar('yoyooy');
+const proxy = new Proxy(bar, {
+  set(target, prop, value) {
+    console.log(target, prop, value);
+    target[prop] = value;
+    return true;
+  }
+});
+
+console.log(proxy.constructor);
+console.log(proxy.constructor === Bar);
+ */
