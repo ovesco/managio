@@ -3,7 +3,7 @@ import { getType } from './TypeMatcher';
 import AbstractRelation from "./Fields/AbstractRelation";
 
 class DocumentDefinition {
-  private fields: Map<string, Field> = new Map();
+  public readonly fields: Map<string, Field> = new Map();
 
   constructor(private constructor: Function, public readonly collectionName: string) {
   }

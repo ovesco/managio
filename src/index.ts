@@ -20,6 +20,10 @@ class Example {
 
   @column
   private baz: boolean;
+
+  setFoo(foo) {
+    this.foo = foo;
+  }
 }
 
 @document("foos")
@@ -48,7 +52,7 @@ const config = {
 
 createConnection(config).then(async (manager) => {
   const e = new Example(10, 'yo', true);
-  console.log(manager.schema);
+  e.setFoo('yoyoyo');
   manager.persist(e);
   await manager.flush();
 });

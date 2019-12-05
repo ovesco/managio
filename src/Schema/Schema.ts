@@ -21,6 +21,10 @@ class Schema {
     throw new Error('Unknown class definition for ' + className.toString());
   }
 
+  hasDefinition(className: Function) {
+    return this.$getDefinition(className) !== null;
+  }
+
   private $getDefinition(className: Function) {
     if (this.documents.has(className)) return this.documents.get(className);
     else if(this.edges.has(className)) return this.edges.get(className);

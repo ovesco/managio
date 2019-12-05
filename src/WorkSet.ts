@@ -1,12 +1,11 @@
 import Schema from './Schema/Schema';
+import Manager from './Manager';
 
 class WorkSet {
 
-  private dirtyMap: Map<object, boolean> = new Map();
-
   private changeSet: Array<object> = [];
 
-  constructor(private schema: Schema) {
+  constructor(private manager: Manager, private schema: Schema) {
 
   }
 
@@ -20,3 +19,5 @@ class WorkSet {
     this.dirtyMap.has(item) ? this.dirtyMap.get(item) : false;
   }
 }
+
+export default WorkSet;
