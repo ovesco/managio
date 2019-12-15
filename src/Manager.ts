@@ -2,65 +2,56 @@ import DocumentRepository from './Repository/DocumentRepository';
 import Database from './Wrapper/Database';
 import Schema from './Schema/Schema';
 
+import Transaction from './Persistance/Transaction';
+import { buildRepositories } from './Repository/RepositoryFactory';
+
 class Manager {
 
-  private dirtyMap: Map<object, boolean> = new Map();
+  private workSet: Transaction;
 
-  private watchingSet: Array<object> = [];
+  private repositories: Map<Function, DocumentRepository>;
 
   constructor(public readonly schema: Schema, public readonly connection: Database) {
-    Managers.registerManager(this);
+    schema.validate();
+    this.repositories = buildRepositories(this);
+    this.workSet = new Transaction(this);
   }
 
   persist<T extends object>(item: T): T {
-    this.attach(item);
-    this.markDirty(item);
+    this.schema.isPartOfSchema(item);
+    const { key } = this.schema.getObjectDefinition(item).keyField;
+    const keyValue = item[key];
+    if (this.emptyValue(keyValue)) this.workSet.scheduleForInsert(item);
+    else this.workSet.scheduleForUpdate(item);
     return item;
   }
 
   detach<T extends object>(item: T): T {
-    const index = this.watchingSet.indexOf(item);
-    if (index > -1) this.watchingSet.splice(index, 1);
+    this.schema.isPartOfSchema(item);
+    this.workSet.scheduleForDetach(item);
     return item;
   }
 
   attach<T extends object>(item: T): T {
-    if (!this.watchingSet.includes(item)) this.watchingSet.push(item);
-    return item;
-  }
-
-  markDirty<T extends object>(item: T) {
-    this.dirtyMap.set(item, true);
+    return this.persist(item);
   }
 
   async flush() {
-    
   }
 
-  remove(item: object): Promise<boolean> {
-    return null;
+  remove<T extends object>(item: T): T {
+    this.workSet.scheduleForDelete(item);
+    return item;
   }
 
-  getRepository<T>(): DocumentRepository<T> {
-    return null;
+  getRepository(className: Function): DocumentRepository {
+    this.schema.isPartOfSchema(className);
+    return this.repositories.get(className);
+  }
+
+  private emptyValue(value: any) {
+    return value === null || value === undefined;
   }
 }
 
 export default Manager;
-
-export class Managers {
-  static managers: Manager[] = [];
-
-  static registerManager(manager: Manager) {
-    Managers.managers.push(manager);
-  }
-
-  static getManagerFor(className: Function) {
-    for (const manager of Managers.managers) {
-      if (manager.schema.hasDefinition(className)) {
-        return manager;
-      }
-    }
-    return null;
-  }
-}

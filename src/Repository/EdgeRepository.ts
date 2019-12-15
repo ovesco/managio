@@ -1,4 +1,6 @@
 import DocumentRepository from './DocumentRepository';
 
-class EdgeRepository<T> extends DocumentRepository<T> {
+class EdgeRepository extends DocumentRepository {
 }
+
+export default EdgeRepository;

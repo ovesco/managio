@@ -1,26 +1,33 @@
-import BaseCollection from '../Wrapper/BaseCollection';
+import Manager from '../Manager';
 
-abstract class DocumentRepository<T> {
+export interface IRepository {
+  find<T>(id: string): Promise<T>;
 
-  private collection: BaseCollection;
+  findBy<T>(params: object): Promise<T[]>;
 
-  constructor(collection: BaseCollection) {
-    this.collection = collection;
+  findAll<T>(): Promise<T[]>;
+
+  findOneBy<T>(params: object): Promise<T>;
+}
+
+class DocumentRepository {
+
+  constructor(private manager: Manager) {
   }
 
-  async find(id: string): Promise<T> {
+  async find<T>(id: string): Promise<T> {
     return null;
   }
 
-  async findBy(params: object): Promise<T[]> {
+  async findBy<T>(params: object): Promise<T[]> {
     return null;
   }
 
-  async findAll(): Promise<T[]> {
+  async findAll<T>(): Promise<T[]> {
     return null;
   }
 
-  async findOneBy(params: object): Promise<T> {
+  async findOneBy<T>(params: object): Promise<T> {
     return null;
   }
 }

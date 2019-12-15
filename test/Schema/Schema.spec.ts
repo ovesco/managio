@@ -2,15 +2,36 @@ import 'reflect-metadata';
 import { expect } from 'chai';
 import 'mocha';
 
-import { document, column } from '../../src/Decorators/ClassDecorators';
+import {document, column, edge} from '../../src/Decorators/ClassDecorators';
 
-@document
+@document('examples')
 class Example {
 
   @column
-  private foo: number;
+  public numberval: number = 3;
 
-  private bar: string;
+  @column
+  public stringval: string;
+
+  @column
+  public boolval: boolean = false;
+}
+
+@document('foo')
+class Foo {
+
+  @
+  public bar: Bar;
+}
+
+@document('bars')
+class Bar {
+
+}
+
+@edge('examplefoos')
+class ExampleFoo {
+
 }
 
 describe('Object to document', () => {

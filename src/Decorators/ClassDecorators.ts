@@ -1,72 +1,91 @@
+/* eslint-disable no-shadow */
 import 'reflect-metadata';
+import * as deepmerge from 'deepmerge';
+
 import GlobalRegistrer from '../Schema/GlobalRegistrer';
 import Schema from '../Schema/Schema';
-import { Managers } from '../Manager';
+import { DocumentOptions } from '../Schema/DocumentDefinition';
+import DocumentRepository from '../Repository/DocumentRepository';
+import EdgeRepository from '../Repository/EdgeRepository';
 
-type Class =  { new(...args: any[]): {} };
+type Class = { new(...args: any[]): {} };
 
-function construct(constructor, args) {
-  const c: any = function () {
-    return constructor.apply(this, args);
-  };
-  c.prototype = constructor.prototype;
-  return new c();
-}
+// eslint-disable-next-line
+export const document = (options: string | DocumentOptions) => {
 
-const proxyGenerator = (constructor) => {
-  return (...args) => {
-    const newConstructor = construct(constructor, args);
-    return new Proxy(newConstructor, {
-      set(target, key: string, value, receiver) {
-        const proxyClass = GlobalRegistrer.getInstance().legacyToProxy.get(constructor);
-        const manager = Managers.getManagerFor(proxyClass);
-        const fieldKeys = Array.from(manager.schema.getDefinition(proxyClass).fields.keys());
-        if (fieldKeys.includes(key)) Managers.getManagerFor(proxyClass).markDirty(target);
-        return Reflect.set(target, key, value, receiver);
-      }
+  const collName = typeof options === 'string' ? options : options.collectionName;
+  return <T extends Class>(constructor: T) => {
+    const baseDocumentOptions: DocumentOptions = {
+      collectionName: collName,
+      repositoryClass: DocumentRepository,
+    };
+
+    const givenOptions = typeof options === 'string'
+      ? baseDocumentOptions
+      : deepmerge(baseDocumentOptions, options);
+
+    GlobalRegistrer.getInstance().addModelTask(constructor, (schema: Schema) => {
+      schema.registerDocument(constructor, collName, givenOptions);
     });
   };
 };
 
-export const document = (collectionName: string) => {
-  return <T extends Class>(constructor: T): T => {
+export const edge = (options: string | DocumentOptions) => {
 
-    const generator = proxyGenerator(constructor);
-
-    Object.defineProperty(generator, 'name', { value: `${constructor.name}Proxy` });
-    generator.prototype = constructor.prototype;
-    GlobalRegistrer.getInstance().addModelTask(generator, constructor, (schema: Schema) => {
-      schema.registerDocument(generator, collectionName);
-    });
-    return generator as unknown as T;
+  const collName = typeof options === 'string' ? options : options.collectionName;
+  const baseEdgeOptions: DocumentOptions = {
+    collectionName: collName,
+    repositoryClass: EdgeRepository,
   };
-};
 
-export const edge = (collectionName: string, from: Function, to: Function) => {
-  return  <T extends Class>(constructor: T) => {
-
-    const generator = proxyGenerator(constructor);
-
-    Object.defineProperty(generator, 'name', { value: `${constructor.name}Proxy` });
-    generator.prototype = constructor.prototype;
-    GlobalRegistrer.getInstance().addModelTask(generator, constructor, (schema: Schema) => {
-      schema.registerEdge(generator, collectionName, from, to);
+  const givenOptions = typeof options === 'string'
+    ? baseEdgeOptions
+    : deepmerge(baseEdgeOptions, options);
+  return <T extends Class>(constructor: T) => {
+    GlobalRegistrer.getInstance().addModelTask(constructor, (schema: Schema) => {
+      schema.registerEdge(constructor, collName, givenOptions);
     });
-    return generator as unknown as T;
   };
 };
 
 export const column = (target: any, key: string) => {
   const { constructor } = target;
   GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
-    schema.getDefinition(GlobalRegistrer.getInstance().legacyToProxy.get(constructor)).addField(key, target);
+    schema.getDefinition(constructor).addField(key, target);
+  });
+};
+
+export const key = (target: any, key: string) => {
+  const { constructor } = target;
+  GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
+    schema.getDefinition(constructor).addKeyField(key, target);
+  });
+};
+
+export const id = (target: any, key: string) => {
+  const { constructor } = target;
+  GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
+    schema.getDefinition(constructor).addIdField(key, target);
+  });
+};
+
+export const rev = (target: any, key: string) => {
+  const { constructor } = target;
+  GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
+    schema.getDefinition(constructor).addrevField(key, target);
   });
 };
 
 export const from = (target: any, key: string) => {
-  console.log(target, key);
   const { constructor } = target;
   GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
-    // do stuff
+    schema.getEdgeDefinition(constructor).setFrom(key, target);
+  });
+};
+
+export const to = (target: any, key: string) => {
+  const { constructor } = target;
+  GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
+    schema.getEdgeDefinition(constructor).setTo(key, target);
   });
 };

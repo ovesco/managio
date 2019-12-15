@@ -1,5 +1,5 @@
-import DocumentDefinition from "./DocumentDefinition";
-import EdgeDefinition from "./EdgeDefinition";
+import DocumentDefinition, { DocumentOptions } from './DocumentDefinition';
+import EdgeDefinition from './EdgeDefinition';
 
 class Schema {
 
@@ -7,28 +7,51 @@ class Schema {
 
   public readonly edges: Map<Function, EdgeDefinition> = new Map();
 
-  registerDocument(className: Function, collectionName: string) {
-    this.documents.set(className, new DocumentDefinition(className, collectionName));
+  validate() {
+    this.documents.forEach((docDef) => {
+      docDef.validate(this);
+    });
+    this.documents.forEach((edgeDef) => {
+      edgeDef.validate(this);
+    });
   }
 
-  registerEdge(className: Function, collectionName: string, from: Function, to: Function) {
-    this.edges.set(className, new EdgeDefinition(className, collectionName, from, to));
+  isPartOfSchema(item: object | Function) {
+    const constructor = item instanceof Function ? item : item.constructor;
+    const definition = this.getDefinition(constructor);
+    if (definition === null) throw new Error(`Class ${constructor.name} is not part of defined schema`);
   }
 
-  getDefinition(className: Function): DocumentDefinition | EdgeDefinition {
-    const result = this.$getDefinition(className);
-    if (result !== null) return result;
-    throw new Error('Unknown class definition for ' + className.toString());
+  registerDocument(className: Function, collectionName: string, options: DocumentOptions) {
+    this.documents.set(className, new DocumentDefinition(className, collectionName, options));
+  }
+
+  registerEdge(className: Function, collectionName: string, options: DocumentOptions) {
+    this.edges.set(className, new EdgeDefinition(className, collectionName, options));
+  }
+
+  getDefinition(className: Function): EdgeDefinition | DocumentDefinition {
+    if (this.documents.has(className)) return this.documents.get(className);
+    if (this.edges.has(className)) return this.edges.get(className);
+    return null;
+  }
+
+  getObjectDefinition(item: object) {
+    return this.getDefinition(item.constructor);
+  }
+
+  getDocumentDefinition(className: Function): DocumentDefinition {
+    if (this.documents.has(className)) return this.documents.get(className);
+    return null;
+  }
+
+  getEdgeDefinition(className: Function): EdgeDefinition {
+    if (this.edges.has(className)) return this.edges.get(className);
+    return null;
   }
 
   hasDefinition(className: Function) {
-    return this.$getDefinition(className) !== null;
-  }
-
-  private $getDefinition(className: Function) {
-    if (this.documents.has(className)) return this.documents.get(className);
-    else if(this.edges.has(className)) return this.edges.get(className);
-    return null;
+    return this.getDefinition(className) !== null;
   }
 }
 

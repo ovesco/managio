@@ -1,9 +1,25 @@
+// eslint-disable-next-line
 import 'reflect-metadata';
 
-import { document, column, edge } from './Decorators/ClassDecorators';
-import { ConnectionParameters, createConnection } from "./CreateConnection";
+import {
+  document,
+  column,
+  edge,
+  key,
+} from './Decorators/ClassDecorators';
+import { ConnectionParameters, createConnection } from './CreateConnection';
+import DocumentRepository from './Repository/DocumentRepository';
 
-@document("examples")
+class ExampleRepository extends DocumentRepository<Example> {
+  getSwag() {
+    return 'swag';
+  }
+}
+
+@document({
+  collectionName: 'examples',
+  repositoryClass: ExampleRepository,
+})
 class Example {
 
   constructor(foo, bar, baz) {
@@ -11,6 +27,9 @@ class Example {
     this.bar = bar;
     this.baz = baz;
   }
+
+  @key
+  private key: number;
 
   @column
   private foo: number;
@@ -26,14 +45,17 @@ class Example {
   }
 }
 
-@document("foos")
+@document('foos')
 class Foo {
+
+  @key
+  private key: number;
 
   @column
   private swag: string;
 }
 
-@edge("fooexamples", Example, Foo)
+@edge('fooexamples')
 class FooExample {
 
   @column
@@ -47,7 +69,7 @@ const config = {
     type: 'basic',
     username: 'root',
     password: 'root',
-  }
+  },
 } as ConnectionParameters;
 
 createConnection(config).then(async (manager) => {
@@ -55,6 +77,9 @@ createConnection(config).then(async (manager) => {
   e.setFoo('yoyoyo');
   manager.persist(e);
   await manager.flush();
+
+  const repository = manager.getRepository(Example) as ExampleRepository;
+  console.log(repository.getSwag());
 });
 
 /*
@@ -74,3 +99,4 @@ const proxy = new Proxy(bar, {
 console.log(proxy.constructor);
 console.log(proxy.constructor === Bar);
  */
+
