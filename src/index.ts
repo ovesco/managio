@@ -10,7 +10,7 @@ import {
 import { ConnectionParameters, createConnection } from './CreateConnection';
 import DocumentRepository from './Repository/DocumentRepository';
 
-class ExampleRepository extends DocumentRepository<Example> {
+class ExampleRepository extends DocumentRepository {
   getSwag() {
     return 'swag';
   }

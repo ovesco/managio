@@ -1,5 +1,6 @@
 import { Database as DB } from 'arangojs';
 import { Config } from 'arangojs/lib/cjs/connection';
+import { AqlLiteral } from 'arangojs/lib/cjs/aql-query';
 import { CreateDatabaseUser } from 'arangojs/lib/cjs/database';
 import { EdgeCollection as ArangoEdgeCollection, DocumentCollection as ArangoDocumentCollection } from 'arangojs/lib/cjs/collection';
 
@@ -97,7 +98,11 @@ class Database {
       }
       // Todo check system collections
       return null;
-    }).filter(it => it !== null);
+    }).filter((it) => it !== null);
+  }
+
+  async query(query: string | AqlLiteral, params: object = {}) {
+    return this.db.query(query, params);
   }
 }
 
