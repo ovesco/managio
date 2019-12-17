@@ -16,5 +16,8 @@ module.exports = {
   rules: {
     "padded-blocks": "off",
     "import/no-cycle": "off",
+    "linebreak-style": "off",
+    "max-len": ["error", 140],
+    "no-underscore-dangle": "off",
   }
 };

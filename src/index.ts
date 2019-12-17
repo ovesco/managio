@@ -4,7 +4,6 @@ import 'reflect-metadata';
 import {
   document,
   column,
-  edge,
   key,
 } from './Decorators/ClassDecorators';
 import { ConnectionParameters, createConnection } from './CreateConnection';
@@ -31,17 +30,21 @@ class Example {
   @key
   private key: number;
 
-  @column
+  @column()
   private foo: number;
 
-  @column
+  @column()
   private bar: string;
 
-  @column
+  @column()
   private baz: boolean;
 
   setFoo(foo) {
     this.foo = foo;
+  }
+
+  getKey() {
+    return this.key;
   }
 }
 
@@ -51,35 +54,23 @@ class Foo {
   @key
   private key: number;
 
-  @column
+  @column()
   private swag: string;
-}
-
-@edge('fooexamples')
-class FooExample {
-
-  @column
-  private yolo: number;
 }
 
 const config = {
   database: 'mydb',
-  models: [Example, FooExample, Foo],
-  auth: {
-    type: 'basic',
-    username: 'root',
-    password: 'root',
-  },
+  models: [Example, Foo],
 } as ConnectionParameters;
 
 createConnection(config).then(async (manager) => {
   const e = new Example(10, 'yo', true);
-  e.setFoo('yoyoyo');
+  const f = new Example(20, 'yoyoyoyoyo', false);
   manager.persist(e);
+  console.log(e);
+  manager.persist(f);
   await manager.flush();
-
-  const repository = manager.getRepository(Example) as ExampleRepository;
-  console.log(repository.getSwag());
+  console.log(e);
 });
 
 /*
@@ -99,4 +90,3 @@ const proxy = new Proxy(bar, {
 console.log(proxy.constructor);
 console.log(proxy.constructor === Bar);
  */
-

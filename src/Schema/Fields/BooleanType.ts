@@ -1,6 +1,9 @@
-import AbstractType from './AbstractType';
+import ColumnType from './ColumnType';
 
-class BooleanType extends AbstractType {
+class BooleanType extends ColumnType {
+  validateValue(value: any): boolean {
+    return typeof value === 'boolean';
+  }
 }
 
 export default BooleanType;

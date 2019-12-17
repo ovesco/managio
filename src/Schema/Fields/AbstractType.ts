@@ -6,6 +6,10 @@ abstract class AbstractType {
   fromArangoData(value: any) {
     return value;
   }
+
+  validateValue(value: any) {
+    return true;
+  }
 }
 
 export default AbstractType;

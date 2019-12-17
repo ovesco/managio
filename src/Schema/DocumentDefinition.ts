@@ -8,6 +8,8 @@ import RevType from './Fields/RevType';
 import KeyType from './Fields/KeyType';
 import Schema from './Schema';
 import { RepositoryType } from '../Types';
+import ColumnType, { columnConfig } from './Fields/ColumnType';
+import RequiredValueError from "../Errors/RequiredValueError";
 
 export interface DocumentOptions {
   collectionName: string,
@@ -16,15 +18,15 @@ export interface DocumentOptions {
 
 class DocumentDefinition {
 
-  private $idField: Field = null;
+  private $idField: Field<IdType> = null;
 
-  private $keyField: Field = null;
+  private $keyField: Field<KeyType> = null;
 
-  private $revField: Field = null;
+  private $revField: Field<RevType> = null;
 
-  private $fields: Map<string, Field> = new Map();
+  private $fields: Map<string, Field<ColumnType>> = new Map();
 
-  private $relations: Map<string, Field> = new Map();
+  private $relations: Map<string, Field<AbstractRelation>> = new Map();
 
   constructor(public readonly constructor: Function, public readonly collectionName: string,
     public readonly options: DocumentOptions) {}
@@ -50,14 +52,29 @@ class DocumentDefinition {
   }
 
   // eslint-disable-next-line
-  validate(schema: Schema) {
+  isCorrectlyDefined(schema: Schema) {
     if (this.$keyField === null) {
       throw new InvalidSchemaDefinitionError(this.constructor, 'Missing at least a key field');
     }
   }
 
-  addField(key: string, target: any) {
-    this.$fields.set(key, new Field(key, getType(key, target)));
+  validate(item: object) {
+    const plainItem = { ...item };
+    this.fields.forEach((field) => {
+      const { config } = field.type;
+      const value = plainItem[field.key];
+      if (value === null || value === undefined) {
+        if (config.required) {
+          throw new RequiredValueError(item.constructor, field.key);
+        }
+      } else {
+        field.type.validateValue(value);
+      }
+    });
+  }
+
+  addField(key: string, target: any, options: columnConfig) {
+    this.$fields.set(key, new Field(key, getType(key, target, options)));
   }
 
   addIdField(key: string, target: any) {

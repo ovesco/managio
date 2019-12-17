@@ -1,6 +1,9 @@
-import AbstractType from './AbstractType';
+import ColumnType from './ColumnType';
 
-class StringType extends AbstractType {
+class StringType extends ColumnType {
+  validateValue(value: any): boolean {
+    return typeof value === 'string';
+  }
 }
 
 export default StringType;

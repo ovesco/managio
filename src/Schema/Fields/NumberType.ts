@@ -1,6 +1,9 @@
-import AbstractType from './AbstractType';
+import ColumnType from './ColumnType';
 
-class NumberType extends AbstractType {
+class NumberType extends ColumnType {
+  validateValue(value: any): boolean {
+    return typeof value === 'number';
+  }
 }
 
 export default NumberType;

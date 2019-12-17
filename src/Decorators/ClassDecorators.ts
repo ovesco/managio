@@ -48,11 +48,15 @@ export const edge = (options: string | DocumentOptions) => {
   };
 };
 
-export const column = (target: any, key: string) => {
-  const { constructor } = target;
-  GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
-    schema.getDefinition(constructor).addField(key, target);
-  });
+export const column = (required: boolean = true) => {
+  return (target: any, key: string) => {
+    const { constructor } = target;
+    GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
+      schema.getDefinition(constructor).addField(key, target, {
+        required,
+      });
+    });
+  };
 };
 
 export const key = (target: any, key: string) => {

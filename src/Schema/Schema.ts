@@ -9,10 +9,10 @@ class Schema {
 
   validate() {
     this.documents.forEach((docDef) => {
-      docDef.validate(this);
+      docDef.isCorrectlyDefined(this);
     });
-    this.documents.forEach((edgeDef) => {
-      edgeDef.validate(this);
+    this.edges.forEach((edgeDef) => {
+      edgeDef.isCorrectlyDefined(this);
     });
   }
 
@@ -34,10 +34,6 @@ class Schema {
     if (this.documents.has(className)) return this.documents.get(className);
     if (this.edges.has(className)) return this.edges.get(className);
     return null;
-  }
-
-  getObjectDefinition(item: object) {
-    return this.getDefinition(item.constructor);
   }
 
   getDocumentDefinition(className: Function): DocumentDefinition {

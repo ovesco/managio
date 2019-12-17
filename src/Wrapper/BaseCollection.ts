@@ -1,4 +1,4 @@
-import { BaseCollection as ArangoBaseCollection } from 'arangojs/lib/cjs/collection';
+import { BaseCollection as ArangoBaseCollection, DocumentCollection } from 'arangojs/lib/cjs/collection';
 import { CreateCollectionOptions } from 'arangojs/lib/cjs/util/types';
 
 class BaseCollection {
@@ -21,6 +21,10 @@ class BaseCollection {
     return this.collection.unload();
   }
 
+  async save(data, opts = {}) {
+    return (this.collection as DocumentCollection).save(data, opts);
+  }
+
   async setProperties(properties: CreateCollectionOptions) {
     return this.collection.setProperties(properties);
   }
@@ -39,6 +43,10 @@ class BaseCollection {
 
   async drop(properties) {
     return this.collection.drop(properties);
+  }
+
+  async import(data, opts = {}) {
+    return this.collection.import(data, opts);
   }
 }
 
