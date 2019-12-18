@@ -9,6 +9,14 @@ class BaseCollection {
     this.collection = collection;
   }
 
+  getNativeCollection() {
+    return this.collection;
+  }
+
+  name() {
+    return this.collection.name;
+  }
+
   async create(properties?: CreateCollectionOptions) {
     return this.collection.create(properties);
   }
@@ -43,6 +51,22 @@ class BaseCollection {
 
   async drop(properties) {
     return this.collection.drop(properties);
+  }
+
+  async document(key) {
+    return this.collection.document(key);
+  }
+
+  async all(opts = {}) {
+    return this.collection.all(opts);
+  }
+
+  async byExample(example: object) {
+    return this.collection.byExample(example);
+  }
+
+  async firstExample(example: object) {
+    return this.collection.firstExample(example);
   }
 
   async import(data, opts = {}) {

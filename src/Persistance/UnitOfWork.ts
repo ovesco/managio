@@ -1,6 +1,4 @@
 /* eslint-disable dot-notation */
-import 'reflect-metadata';
-
 import Manager from '../Manager';
 import ChangeSet, { Operation } from './ChangeSet';
 import EdgeDefinition from '../Schema/EdgeDefinition';
@@ -11,6 +9,7 @@ enum State {
   DETACHED = 'detached',
   REMOVED = 'removed',
 }
+
 
 class UnitOfWork {
 
@@ -27,6 +26,13 @@ class UnitOfWork {
   private identityMap: Map<object, State> = new Map();
 
   constructor(private manager: Manager) {
+  }
+
+  generateNextWorkset() {
+    const uow = new UnitOfWork(this.manager);
+    this.identityMap.clear();
+    this.initialState.clear();
+    return uow;
   }
 
   async syncChangeSet() {
@@ -46,7 +52,7 @@ class UnitOfWork {
           break;
       }
     });
-    return this.applyInsert(toInsert);
+    await this.applyInsert(toInsert);
   }
 
   async applyInsert(insertChanges: ChangeSet[]) {
@@ -74,10 +80,7 @@ class UnitOfWork {
       changes.forEach((change: ChangeSet, i) => {
         const { item } = change;
         const itemResponse = response[i];
-        const definition = this.manager.schema.getDefinition(item.constructor);
-        if (definition.idField) Reflect.set(item, definition.idField.key, itemResponse['_id']);
-        if (definition.revField) Reflect.set(item, definition.revField.key, itemResponse['_rev']);
-        if (definition.keyField) Reflect.set(item, definition.keyField.key, itemResponse['_key']);
+        this.manager.retriever.reflectApplyArangoFields(itemResponse, item);
       });
     });
   }
@@ -89,6 +92,9 @@ class UnitOfWork {
       definition.validate(item);
       let operation;
       let previousState = {};
+      if (state === State.DETACHED) {
+        return; // Entity is detached and as such shouldn't be part of this job
+      }
       if (state === State.CREATED) {
         operation = Operation.INSERT;
       } else if (state === State.REMOVED) {
@@ -102,13 +108,13 @@ class UnitOfWork {
       // Feed column data
       definition.fields.forEach((field, key) => {
         if (previousState[key] !== plainItem[key]) {
-          persistedData[key] = plainItem[key];
+          persistedData[key] = field.type.toArangoData(plainItem[key]);
         }
       });
       // Feed key and id if necessary
       if (operation !== Operation.INSERT) {
+        persistedData['_key'] = plainItem[definition.keyField.key];
         if (definition.idField) persistedData['_id'] = plainItem[definition.idField.key];
-        if (definition.keyField) persistedData['_key'] = plainItem[definition.keyField.key];
       }
       // If its an edge
       if (definition instanceof EdgeDefinition) {

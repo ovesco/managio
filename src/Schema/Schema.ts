@@ -1,5 +1,6 @@
 import DocumentDefinition, { DocumentOptions } from './DocumentDefinition';
 import EdgeDefinition from './EdgeDefinition';
+import { ClassType } from '../Types';
 
 class Schema {
 
@@ -16,7 +17,7 @@ class Schema {
     });
   }
 
-  isPartOfSchema(item: object | Function) {
+  isPartOfSchema(item: object | ClassType) {
     const constructor = item instanceof Function ? item : item.constructor;
     const definition = this.getDefinition(constructor);
     if (definition === null) throw new Error(`Class ${constructor.name} is not part of defined schema`);

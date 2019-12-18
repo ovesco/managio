@@ -1,14 +1,15 @@
-import { AqlLiteral } from 'arangojs/lib/cjs/aql-query';
+import { AqlLiteral, AqlQuery } from 'arangojs/lib/cjs/aql-query';
 
 import Database from '../Wrapper/Database';
+import NativeQueryResult from './NativeQueryResult';
 
 class NativeQueryRunner {
-  constructor(private connection: Database, private query: string | AqlLiteral,
-    private params: object = {}) {
+  constructor(private connection: Database) {
   }
 
-  async getRawResults() {
-    return this.connection.query(this.query, this.params);
+  async runNativeQuery(nativeQuery: string | AqlLiteral | AqlQuery, params: object = null): Promise<NativeQueryResult> {
+    const result = await this.connection.query(nativeQuery, params);
+    return new NativeQueryResult(result);
   }
 }
 

@@ -18,6 +18,6 @@ module.exports = {
     "import/no-cycle": "off",
     "linebreak-style": "off",
     "max-len": ["error", 140],
-    "no-underscore-dangle": "off",
+    "dot-notation": "off",
   }
 };

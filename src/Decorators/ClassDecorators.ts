@@ -7,14 +7,13 @@ import Schema from '../Schema/Schema';
 import { DocumentOptions } from '../Schema/DocumentDefinition';
 import DocumentRepository from '../Repository/DocumentRepository';
 import EdgeRepository from '../Repository/EdgeRepository';
-
-type Class = { new(...args: any[]): {} };
+import { ClassType } from '../Types';
 
 // eslint-disable-next-line
 export const document = (options: string | DocumentOptions) => {
 
   const collName = typeof options === 'string' ? options : options.collectionName;
-  return <T extends Class>(constructor: T) => {
+  return <T extends ClassType>(constructor: T) => {
     const baseDocumentOptions: DocumentOptions = {
       collectionName: collName,
       repositoryClass: DocumentRepository,
@@ -41,7 +40,7 @@ export const edge = (options: string | DocumentOptions) => {
   const givenOptions = typeof options === 'string'
     ? baseEdgeOptions
     : deepmerge(baseEdgeOptions, options);
-  return <T extends Class>(constructor: T) => {
+  return <T extends ClassType>(constructor: T) => {
     GlobalRegistrer.getInstance().addModelTask(constructor, (schema: Schema) => {
       schema.registerEdge(constructor, collName, givenOptions);
     });

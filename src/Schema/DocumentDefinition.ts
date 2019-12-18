@@ -7,13 +7,13 @@ import IdType from './Fields/IdType';
 import RevType from './Fields/RevType';
 import KeyType from './Fields/KeyType';
 import Schema from './Schema';
-import { RepositoryType } from '../Types';
+import { ClassType } from '../Types';
 import ColumnType, { columnConfig } from './Fields/ColumnType';
-import RequiredValueError from "../Errors/RequiredValueError";
+import RequiredValueError from '../Errors/RequiredValueError';
 
 export interface DocumentOptions {
   collectionName: string,
-  repositoryClass?: RepositoryType,
+  repositoryClass?: ClassType,
 }
 
 class DocumentDefinition {

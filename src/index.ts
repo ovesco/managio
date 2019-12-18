@@ -1,5 +1,6 @@
 // eslint-disable-next-line
 import 'reflect-metadata';
+import { aql } from 'arangojs';
 
 import {
   document,
@@ -9,7 +10,7 @@ import {
 import { ConnectionParameters, createConnection } from './CreateConnection';
 import DocumentRepository from './Repository/DocumentRepository';
 
-class ExampleRepository extends DocumentRepository {
+class ExampleRepository extends DocumentRepository<Example> {
   getSwag() {
     return 'swag';
   }
@@ -21,7 +22,7 @@ class ExampleRepository extends DocumentRepository {
 })
 class Example {
 
-  constructor(foo, bar, baz) {
+  constructor(foo: number, bar, baz) {
     this.foo = foo;
     this.bar = bar;
     this.baz = baz;
@@ -64,13 +65,19 @@ const config = {
 } as ConnectionParameters;
 
 createConnection(config).then(async (manager) => {
-  const e = new Example(10, 'yo', true);
-  const f = new Example(20, 'yoyoyoyoyo', false);
-  manager.persist(e);
-  console.log(e);
-  manager.persist(f);
+  /*
+  const abc = new Example(123, 'abc', false);
+  manager.persist(abc);
   await manager.flush();
-  console.log(e);
+  console.log(abc);
+   */
+  const repo = manager.getRepository(Example);
+  const queryResult = await repo.createQueryRunner().runQuery((colName) => {
+    console.log(colName);
+    return aql`FOR x IN ${colName} FILTER x.bar == 'abc' RETURN x`;
+  });
+  console.log(await queryResult.all());
+  console.log((await repo.findBy({ bar: 'abc' })).map((it) => it.getKey()));
 });
 
 /*

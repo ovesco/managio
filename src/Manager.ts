@@ -8,16 +8,20 @@ import DocumentCollection from './Wrapper/DocumentCollection';
 import EdgeCollection from './Wrapper/EdgeCollection';
 import EdgeDefinition from './Schema/EdgeDefinition';
 import { emptyValue } from './Helpers';
+import DataRetriever from './Query/DataRetriever';
 
 class Manager {
 
   private workSet: UnitOfWork;
 
-  private repositories: Map<Function, DocumentRepository>;
+  private repositories: Map<Function, DocumentRepository<unknown>>;
+
+  public readonly retriever: DataRetriever;
 
   constructor(public readonly schema: Schema, public readonly connection: Database) {
     schema.validate();
     this.repositories = buildRepositories(this);
+    this.retriever = new DataRetriever(this);
     this.workSet = new UnitOfWork(this);
   }
 
@@ -41,7 +45,8 @@ class Manager {
   }
 
   async flush() {
-    return this.workSet.syncChangeSet();
+    await this.workSet.syncChangeSet();
+    this.workSet = this.workSet.generateNextWorkset();
   }
 
   remove<T extends object>(item: T): T {
@@ -49,9 +54,9 @@ class Manager {
     return item;
   }
 
-  getRepository(className: Function): DocumentRepository {
+  getRepository<T>(className: (new(...args : any[]) => T)): DocumentRepository<T> {
     this.schema.isPartOfSchema(className);
-    return this.repositories.get(className);
+    return this.repositories.get(className) as DocumentRepository<T>;
   }
 
   getWrappedCollection(className: Function): DocumentCollection | EdgeCollection {
