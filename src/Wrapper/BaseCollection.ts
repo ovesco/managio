@@ -37,6 +37,10 @@ class BaseCollection {
     return this.collection.setProperties(properties);
   }
 
+  async bulkUpdate(data, opts = {}) {
+    return this.collection.bulkUpdate(data, opts);
+  }
+
   async rename(name: string) {
     return this.collection.rename(name);
   }

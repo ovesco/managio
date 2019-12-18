@@ -12,7 +12,7 @@ import DataRetriever from './Query/DataRetriever';
 
 class Manager {
 
-  private workSet: UnitOfWork;
+  private unitOfWork: UnitOfWork;
 
   private repositories: Map<Function, DocumentRepository<unknown>>;
 
@@ -22,21 +22,25 @@ class Manager {
     schema.validate();
     this.repositories = buildRepositories(this);
     this.retriever = new DataRetriever(this);
-    this.workSet = new UnitOfWork(this);
+    this.unitOfWork = new UnitOfWork(this);
+  }
+
+  getCurrentUnitOfWork() {
+    return this.unitOfWork;
   }
 
   persist<T extends object>(item: T): T {
     this.schema.isPartOfSchema(item);
     const { key } = this.schema.getDefinition(item.constructor).keyField;
     const keyValue = item[key];
-    if (emptyValue(keyValue)) this.workSet.scheduleForInsert(item);
-    else this.workSet.scheduleForUpdate(item);
+    if (emptyValue(keyValue)) this.unitOfWork.scheduleForInsert(item);
+    else this.unitOfWork.scheduleForUpdate(item);
     return item;
   }
 
   detach<T extends object>(item: T): T {
     this.schema.isPartOfSchema(item);
-    this.workSet.scheduleForDetach(item);
+    this.unitOfWork.scheduleForDetach(item);
     return item;
   }
 
@@ -45,12 +49,13 @@ class Manager {
   }
 
   async flush() {
-    await this.workSet.syncChangeSet();
-    this.workSet = this.workSet.generateNextWorkset();
+    await this.unitOfWork.syncChangeSet();
+    this.unitOfWork = this.unitOfWork.generateNextUnitOfWork();
   }
 
   remove<T extends object>(item: T): T {
-    this.workSet.scheduleForDelete(item);
+    this.schema.isPartOfSchema(item);
+    this.unitOfWork.scheduleForDelete(item);
     return item;
   }
 

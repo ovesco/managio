@@ -5,7 +5,7 @@ import { aql } from 'arangojs';
 import {
   document,
   column,
-  key,
+  key, rev,
 } from './Decorators/ClassDecorators';
 import { ConnectionParameters, createConnection } from './CreateConnection';
 import DocumentRepository from './Repository/DocumentRepository';
@@ -27,6 +27,9 @@ class Example {
     this.bar = bar;
     this.baz = baz;
   }
+
+  @rev
+  private revision: string;
 
   @key
   private key: number;
@@ -65,19 +68,11 @@ const config = {
 } as ConnectionParameters;
 
 createConnection(config).then(async (manager) => {
-  /*
-  const abc = new Example(123, 'abc', false);
-  manager.persist(abc);
-  await manager.flush();
-  console.log(abc);
-   */
   const repo = manager.getRepository(Example);
-  const queryResult = await repo.createQueryRunner().runQuery((colName) => {
-    console.log(colName);
-    return aql`FOR x IN ${colName} FILTER x.bar == 'abc' RETURN x`;
-  });
-  console.log(await queryResult.all());
-  console.log((await repo.findBy({ bar: 'abc' })).map((it) => it.getKey()));
+  const item = await repo.findBy({ baz: true });
+  item.forEach((it) => it.setFoo(Math.round(Math.random() * 10000)));
+  console.log(item.length);
+  await manager.flush();
 });
 
 /*

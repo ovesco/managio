@@ -2,6 +2,8 @@
 import Manager from '../Manager';
 import ChangeSet, { Operation } from './ChangeSet';
 import EdgeDefinition from '../Schema/EdgeDefinition';
+import DeleteQuery from '../Query/DeleteQuery';
+import UnmanagedError from '../Errors/UnmanagedError';
 
 enum State {
   CREATED = 'created',
@@ -28,7 +30,7 @@ class UnitOfWork {
   constructor(private manager: Manager) {
   }
 
-  generateNextWorkset() {
+  generateNextUnitOfWork() {
     const uow = new UnitOfWork(this.manager);
     this.identityMap.clear();
     this.initialState.clear();
@@ -53,23 +55,38 @@ class UnitOfWork {
       }
     });
     await this.applyInsert(toInsert);
+    await this.applyDelete(toDelete);
+    await this.applyUpdate(toUpdate);
+  }
+
+  async applyUpdate(updateChanges: ChangeSet[]) {
+    const collWorks = this.groupByClassName(updateChanges);
+    const updatePromises: Array<Promise<ChangeSet[]>> = [];
+    collWorks.forEach((currentChanges, className) => {
+      const collection = this.manager.getWrappedCollection(className);
+      updatePromises.push(new Promise((resolve) => {
+        // First import changes
+        const changedData = currentChanges.map((it) => it.changedData);
+        collection.bulkUpdate(changedData).then((updateResult) => {
+          updateResult.forEach((arangoData, i) => {
+            const change = currentChanges[i];
+            this.manager.retriever.reflectApplyArangoFields(arangoData, change.item);
+          });
+          resolve(updateResult);
+        });
+      }));
+    });
+    await Promise.all(updatePromises);
   }
 
   async applyInsert(insertChanges: ChangeSet[]) {
     // Perform batch operation to insert all data in correct collections
-    const collWorks: Map<Function, ChangeSet[]> = new Map();
-    insertChanges.forEach((changeSet) => {
-      const className = changeSet.item.constructor;
-      if (!collWorks.has(className)) {
-        collWorks.set(className, []);
-      }
-      collWorks.get(className).push(changeSet);
-    });
+    const collWorks = this.groupByClassName(insertChanges);
     const insertPromises: Array<Promise<{ changes: ChangeSet[], response: object[] }>> = [];
     collWorks.forEach((currentChanges, className) => {
       const collection = this.manager.getWrappedCollection(className);
       insertPromises.push(new Promise((resolve) => {
-        collection.save(currentChanges.map((it) => it.persistedData)).then((response) => {
+        collection.save(currentChanges.map((it) => it.changedData)).then((response) => {
           resolve({ changes: currentChanges, response });
         });
       }));
@@ -82,6 +99,29 @@ class UnitOfWork {
         const itemResponse = response[i];
         this.manager.retriever.reflectApplyArangoFields(itemResponse, item);
       });
+    });
+  }
+
+  async applyDelete(deleteChanges: ChangeSet[]) {
+    const colLWorks = this.groupByClassName(deleteChanges);
+    const deletePromises: Array<Promise<ChangeSet[]>> = [];
+    colLWorks.forEach((changes, className) => {
+      const { keyField } = this.manager.schema.getDefinition(className);
+      deletePromises.push(new Promise((resolve) => {
+        const keys = changes.map((it) => it.item[keyField.key]);
+        const deleteQuery = new DeleteQuery(this.manager, className, keys);
+        deleteQuery.run().then(() => {
+          // Remove all arango fields from deleted items
+          changes.forEach((changeSet) => {
+            this.manager.retriever.reflectRemoveArangoFields(changeSet.item);
+          });
+          resolve(changes);
+        });
+      }));
+    });
+    const deletedChanges = await Promise.all(deletePromises);
+    deletedChanges.forEach((changes) => {
+      // Remove all arango fields from deleted items
     });
   }
 
@@ -101,6 +141,9 @@ class UnitOfWork {
         operation = Operation.DELETE;
       } else {
         operation = Operation.UPDATE;
+        if (!this.initialState.has(item)) {
+          throw new UnmanagedError(item);
+        }
         previousState = this.initialState.get(item);
       }
       const plainItem = { ...item };
@@ -141,6 +184,22 @@ class UnitOfWork {
 
   scheduleForDetach(item: object) {
     this.identityMap.set(item, State.DETACHED);
+  }
+
+  putInitialState(item: object, initialState: object) {
+    if (!this.initialState.has(item)) this.initialState.set(item, initialState);
+  }
+
+  private groupByClassName(changes: ChangeSet[]): Map<Function, ChangeSet[]> {
+    const collWorks: Map<Function, ChangeSet[]> = new Map();
+    changes.forEach((changeSet) => {
+      const className = changeSet.item.constructor;
+      if (!collWorks.has(className)) {
+        collWorks.set(className, []);
+      }
+      collWorks.get(className).push(changeSet);
+    });
+    return collWorks;
   }
 }
 

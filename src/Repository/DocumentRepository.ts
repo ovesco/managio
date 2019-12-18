@@ -32,6 +32,7 @@ class DocumentRepository<T> {
   }
 
   async findBy(params: object): Promise<T[]> {
+    this.validateFields(params);
     return this.createQueryResult(await this.collection.byExample(params)).all();
   }
 
