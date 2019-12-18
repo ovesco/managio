@@ -10,10 +10,10 @@ class Schema {
 
   validate() {
     this.documents.forEach((docDef) => {
-      docDef.isCorrectlyDefined(this);
+      docDef.checkAndFinalize(this);
     });
     this.edges.forEach((edgeDef) => {
-      edgeDef.isCorrectlyDefined(this);
+      edgeDef.checkAndFinalize(this);
     });
   }
 

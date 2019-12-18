@@ -7,6 +7,7 @@ import Schema from '../Schema/Schema';
 import { DocumentOptions } from '../Schema/DocumentDefinition';
 import DocumentRepository from '../Repository/DocumentRepository';
 import EdgeRepository from '../Repository/EdgeRepository';
+import { getNativeType } from '../Schema/TypeMatcher';
 import { ClassType } from '../Types';
 
 // eslint-disable-next-line
@@ -82,13 +83,13 @@ export const rev = (target: any, key: string) => {
 export const from = (target: any, key: string) => {
   const { constructor } = target;
   GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
-    schema.getEdgeDefinition(constructor).setFrom(key, target);
+    schema.getEdgeDefinition(constructor).setFrom(key, getNativeType(key, target));
   });
 };
 
 export const to = (target: any, key: string) => {
   const { constructor } = target;
   GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
-    schema.getEdgeDefinition(constructor).setTo(key, target);
+    schema.getEdgeDefinition(constructor).setTo(key, getNativeType(key, target));
   });
 };

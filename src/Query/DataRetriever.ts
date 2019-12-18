@@ -3,6 +3,7 @@ import { plainToClass } from 'class-transformer';
 
 import { ClassType } from '../Types';
 import Manager from '../Manager';
+import EdgeDefinition from '../Schema/EdgeDefinition';
 
 class DataRetriever {
   constructor(private manager: Manager) {
@@ -14,6 +15,10 @@ class DataRetriever {
     definition.fields.forEach((field) => {
       itemData[field.key] = field.type.fromArangoData(rawData[field.key]);
     });
+    // Check if is edge and fill corresponding fields
+    if (definition instanceof EdgeDefinition) {
+      this.applyEdgeFields(definition, rawData);
+    }
     // Insert key, id and rev
     itemData[definition.keyField.key] = rawData['_key'];
     if (definition.idField) itemData[definition.idField.key] = rawData['_id'];
@@ -22,6 +27,10 @@ class DataRetriever {
     // Write initial state to unit of work map
     this.manager.getCurrentUnitOfWork().putInitialState(item, itemData);
     return this.manager.persist(item);
+  }
+
+  applyEdgeFields(definition: EdgeDefinition, rawData: object) {
+
   }
 
   reflectApplyArangoFields(arangoData: object, item: object) {

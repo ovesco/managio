@@ -60,7 +60,7 @@ class UnitOfWork {
   }
 
   async applyUpdate(updateChanges: ChangeSet[]) {
-    const collWorks = this.groupByClassName(updateChanges);
+    const collWorks = UnitOfWork.groupByClassName(updateChanges);
     const updatePromises: Array<Promise<ChangeSet[]>> = [];
     collWorks.forEach((currentChanges, className) => {
       const collection = this.manager.getWrappedCollection(className);
@@ -81,7 +81,7 @@ class UnitOfWork {
 
   async applyInsert(insertChanges: ChangeSet[]) {
     // Perform batch operation to insert all data in correct collections
-    const collWorks = this.groupByClassName(insertChanges);
+    const collWorks = UnitOfWork.groupByClassName(insertChanges);
     const insertPromises: Array<Promise<{ changes: ChangeSet[], response: object[] }>> = [];
     collWorks.forEach((currentChanges, className) => {
       const collection = this.manager.getWrappedCollection(className);
@@ -103,7 +103,7 @@ class UnitOfWork {
   }
 
   async applyDelete(deleteChanges: ChangeSet[]) {
-    const colLWorks = this.groupByClassName(deleteChanges);
+    const colLWorks = UnitOfWork.groupByClassName(deleteChanges);
     const deletePromises: Array<Promise<ChangeSet[]>> = [];
     colLWorks.forEach((changes, className) => {
       const { keyField } = this.manager.schema.getDefinition(className);
@@ -119,10 +119,7 @@ class UnitOfWork {
         });
       }));
     });
-    const deletedChanges = await Promise.all(deletePromises);
-    deletedChanges.forEach((changes) => {
-      // Remove all arango fields from deleted items
-    });
+    await Promise.all(deletePromises);
   }
 
   computeChangeSet(): ChangeSet[] {
@@ -190,7 +187,7 @@ class UnitOfWork {
     if (!this.initialState.has(item)) this.initialState.set(item, initialState);
   }
 
-  private groupByClassName(changes: ChangeSet[]): Map<Function, ChangeSet[]> {
+  private static groupByClassName(changes: ChangeSet[]): Map<Function, ChangeSet[]> {
     const collWorks: Map<Function, ChangeSet[]> = new Map();
     changes.forEach((changeSet) => {
       const className = changeSet.item.constructor;

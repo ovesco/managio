@@ -3,17 +3,21 @@ import EdgeNodeType from './Fields/EdgeNodeType';
 import Field from './Field';
 import Schema from './Schema';
 import InvalidSchemaDefinitionError from '../Errors/InvalidSchemaDefinitionError';
-import AbstractType from './Fields/AbstractType';
 
 class EdgeDefinition extends DocumentDefinition {
-  private $from: Field<AbstractType> = null;
+  private $from: Field<EdgeNodeType> = null;
 
-  private $to: Field<AbstractType> = null;
+  private $to: Field<EdgeNodeType> = null;
 
-  isCorrectlyDefined(schema: Schema) {
-    super.isCorrectlyDefined(schema);
+  checkAndFinalize(schema: Schema) {
+    super.checkAndFinalize(schema);
     if (this.$from === null) throw new InvalidSchemaDefinitionError(this.constructor, 'No from property found');
     if (this.$to === null) throw new InvalidSchemaDefinitionError(this.constructor, 'No to property found');
+    // Insert id field in from and to types
+    const fromDef = schema.getDefinition(this.$from.type.target);
+    const toDef = schema.getDefinition(this.$to.type.target);
+    this.$from.type.setTargetSchemaData(fromDef.collectionName, fromDef.keyField.key);
+    this.$to.type.setTargetSchemaData(toDef.collectionName, toDef.keyField.key);
   }
 
   get from() {

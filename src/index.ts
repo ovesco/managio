@@ -1,11 +1,11 @@
 // eslint-disable-next-line
 import 'reflect-metadata';
-import { aql } from 'arangojs';
 
 import {
   document,
   column,
-  key, rev,
+  edge,
+  key, rev, from, to,
 } from './Decorators/ClassDecorators';
 import { ConnectionParameters, createConnection } from './CreateConnection';
 import DocumentRepository from './Repository/DocumentRepository';
@@ -16,16 +16,21 @@ class ExampleRepository extends DocumentRepository<Example> {
   }
 }
 
+class Boom {
+  constructor(private yo: string) {}
+}
+
 @document({
   collectionName: 'examples',
   repositoryClass: ExampleRepository,
 })
 class Example {
 
-  constructor(foo: number, bar, baz) {
+  constructor(foo: number, bar, baz, boom) {
     this.foo = foo;
     this.bar = bar;
     this.baz = baz;
+    this.boom = boom;
   }
 
   @rev
@@ -36,6 +41,9 @@ class Example {
 
   @column()
   private foo: number;
+
+  @column()
+  private boom: Boom;
 
   @column()
   private bar: string;
@@ -62,17 +70,30 @@ class Foo {
   private swag: string;
 }
 
+@edge('fooExamples')
+class FooExample {
+
+  @key
+  private key: number;
+
+  @from
+  private from: Foo;
+
+  @to
+  private to: Example;
+}
+
 const config = {
   database: 'mydb',
-  models: [Example, Foo],
+  models: [Example, Foo, FooExample],
 } as ConnectionParameters;
 
 createConnection(config).then(async (manager) => {
+  const foo = new Example(123, 'yoyo', true, new Boom('BOOOOOM'));
+  // manager.persist(foo);
+  console.log(manager.schema.getDefinition(FooExample));
   const repo = manager.getRepository(Example);
-  const item = await repo.findBy({ baz: true });
-  item.forEach((it) => it.setFoo(Math.round(Math.random() * 10000)));
-  console.log(item.length);
-  await manager.flush();
+  console.log(await repo.find('23958'));
 });
 
 /*

@@ -18,15 +18,15 @@ export interface DocumentOptions {
 
 class DocumentDefinition {
 
-  private $idField: Field<IdType> = null;
+  protected $idField: Field<IdType> = null;
 
-  private $keyField: Field<KeyType> = null;
+  protected $keyField: Field<KeyType> = null;
 
-  private $revField: Field<RevType> = null;
+  protected $revField: Field<RevType> = null;
 
-  private $fields: Map<string, Field<ColumnType>> = new Map();
+  protected $fields: Map<string, Field<ColumnType>> = new Map();
 
-  private $relations: Map<string, Field<AbstractRelation>> = new Map();
+  protected $relations: Map<string, Field<AbstractRelation>> = new Map();
 
   constructor(public readonly constructor: Function, public readonly collectionName: string,
     public readonly options: DocumentOptions) {}
@@ -52,7 +52,7 @@ class DocumentDefinition {
   }
 
   // eslint-disable-next-line
-  isCorrectlyDefined(schema: Schema) {
+  checkAndFinalize(schema: Schema) {
     if (this.$keyField === null) {
       throw new InvalidSchemaDefinitionError(this.constructor, 'Missing at least a key field');
     }
