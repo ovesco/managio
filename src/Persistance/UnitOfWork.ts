@@ -125,35 +125,8 @@ class UnitOfWork {
     await Promise.all(deletePromises);
   }
 
-  discoverRelatedElements(item: object, state: State) {
-    const definition = this.manager.schema.getDefinition(item.constructor);
-    const checkEdgeNode = (item: object) => {
-
-    };
-    if (definition instanceof EdgeDefinition) {
-      const from = Reflect.get(item, definition.from.key);
-      const to = Reflect.get(item, definition.to.key);
-      if (from instanceof definition.from.type.target) {
-        const key = Reflect.get(from,)
-      }
-      if (to instanceof definition.to.type.target) {
-
-      }
-    }
-  }
-
   computeChangeSet(): ChangeSet[] {
     const changeSet = [];
-    const discoveredEntities = new Map();
-    this.identityMap.forEach((state, item) => {
-      const definition = this.manager.schema.getDefinition(item.constructor);
-      if (definition instanceof EdgeDefinition) {
-        discoverRelatedElements(this.manager.schema)
-      } else {
-        discoveredEntities.set(item, state);
-      }
-    });
-
     this.identityMap.forEach((state, item) => {
       const definition = this.manager.schema.getDefinition(item.constructor);
       definition.validate(item);

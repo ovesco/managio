@@ -1,16 +1,17 @@
-import DocumentDefinition, { DocumentOptions } from './DocumentDefinition';
+import { DocumentOptions } from './DocumentDefinition';
 import EdgeNodeType from './Fields/EdgeNodeType';
 import Field from './Field';
 import Schema from './Schema';
 import InvalidSchemaDefinitionError from '../Errors/InvalidSchemaDefinitionError';
 import { CascadeType } from '../Types';
+import AbstractDefinition from './AbstractDefinition';
 
 export interface EdgeOptions extends DocumentOptions {
   cascadeFrom: CascadeType,
   cascadeTo: CascadeType,
 }
 
-class EdgeDefinition extends DocumentDefinition {
+class EdgeDefinition extends AbstractDefinition {
   private $from: Field<EdgeNodeType> = null;
 
   private $to: Field<EdgeNodeType> = null;
@@ -24,6 +25,10 @@ class EdgeDefinition extends DocumentDefinition {
     const toDef = schema.getDefinition(this.$to.type.target);
     this.$from.type.setTargetSchemaData(fromDef.collectionName, fromDef.keyField.key);
     this.$to.type.setTargetSchemaData(toDef.collectionName, toDef.keyField.key);
+  }
+
+  get options(): EdgeOptions {
+    return this.$options as EdgeOptions;
   }
 
   get from() {

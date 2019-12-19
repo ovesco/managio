@@ -19,7 +19,7 @@ export const loadSchema = (config: ConnectionParameters) => {
 
 export const updateArangoSchema = async (manager: Manager, config: ConnectionParameters) => {
   const database = manager.connection;
-  const schema = manager.schema;
+  const { schema } = manager;
   const dbs = await database.listDatabases();
   if (!dbs.includes(config.database)) {
     await database.createDatabase(config.database);
@@ -32,7 +32,7 @@ export const updateArangoSchema = async (manager: Manager, config: ConnectionPar
     const collection = definition instanceof EdgeDefinition
       ? database.edgeCollection(definition.collectionName)
       : database.collection(definition.collectionName);
-    if (!collections.map(it => it.name).includes(definition.collectionName)) {
+    if (!collections.map((it) => it.name).includes(definition.collectionName)) {
       await collection.create();
     }
   });

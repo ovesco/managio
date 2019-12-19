@@ -1,6 +1,7 @@
 import DocumentDefinition, { DocumentOptions } from './DocumentDefinition';
 import EdgeDefinition, { EdgeOptions } from './EdgeDefinition';
 import { ClassType } from '../Types';
+import AbstractDefinition from './AbstractDefinition';
 
 class Schema {
 
@@ -31,7 +32,7 @@ class Schema {
     this.edges.set(className, new EdgeDefinition(className, collectionName, options));
   }
 
-  getDefinition(className: Function): EdgeDefinition | DocumentDefinition {
+  getDefinition(className: Function): AbstractDefinition {
     if (this.documents.has(className)) return this.documents.get(className);
     if (this.edges.has(className)) return this.edges.get(className);
     return null;

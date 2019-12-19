@@ -94,19 +94,22 @@ class FooExample {
 
 const config = {
   database: 'mydb',
+  syncSchema: false,
+  arangoConfig: {
+    url: 'http://192.168.99.100:8529',
+  },
   models: [Example, Foo, FooExample],
 } as ConnectionParameters;
 
 createConnection(config).then(async (manager) => {
-  for (let i = 0; i < 100; i += 1) {
-    const example = new Example(i, 'yoyo', true, new Boom('BOOOOOM'));
-    const foo = new Foo();
-    const fooExample = new FooExample(foo, example);
-    manager.persist(fooExample);
-  }
+  // for (let i = 0; i < 100; i += 1) {
+  const example = new Example(3, 'yoyo', true, new Boom('BOOOOOM'));
+  const foo = new Foo();
+  const fooExample = new FooExample(foo, example);
+    // manager.persist(fooExample);
+  // }
   // manager.persist(foo);
-  console.log(manager.schema.getDefinition(FooExample));
-  const repo = manager.getRepository(Example);
+  // const repo = manager.getRepository(Example);
 });
 
 /*

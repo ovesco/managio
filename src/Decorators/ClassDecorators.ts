@@ -8,8 +8,8 @@ import { DocumentOptions } from '../Schema/DocumentDefinition';
 import DocumentRepository from '../Repository/DocumentRepository';
 import EdgeRepository from '../Repository/EdgeRepository';
 import { getNativeType } from '../Schema/TypeMatcher';
-import { ClassType } from '../Types';
-import { EdgeOptions } from '../Schema/EdgeDefinition';
+import { CascadeType, ClassType } from '../Types';
+import EdgeDefinition, { EdgeOptions } from '../Schema/EdgeDefinition';
 import { EdgeNodeConfig } from '../Schema/Fields/EdgeNodeType';
 
 // eslint-disable-next-line
@@ -84,28 +84,42 @@ export const rev = (target: any, key: string) => {
   });
 };
 
-export const from = (cascade: Array<string> = ['persist']) => {
-  const options: EdgeNodeConfig = {
-    onDeleteRemoveOther,
-  };
-
+export const from = (cascade: CascadeType = ['persist']) => {
+  const options: EdgeNodeConfig = deepmerge({
+    onChangeCascade: [],
+  }, { onChangeCascade: cascade });
   return (target: any, key: string) => {
+    /*
+    const sym = Symbol();
+    Object.defineProperty(target, key, {
+      enumerable: true,
+      set(value: any) {
+        this[sym] = value;
+      },
+      get() {
+        return this[sym];
+      },
+    });
+     */
     const { constructor } = target;
+    const fromTarget = getNativeType(key, target);
     GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
-      schema.getEdgeDefinition(constructor).setFrom(key, getNativeType(key, target), options);
+      schema.getEdgeDefinition(constructor).setFrom(key, fromTarget, options);
+      schema.getDocumentDefinition(fromTarget).$fromInEdges.push(schema.getDefinition(constructor) as EdgeDefinition);
     });
   };
 };
 
-export const to = (cascade: Array<string> = ['persist']) => {
-  const options: EdgeNodeConfig = {
-    cascade,
-  };
-
+export const to = (cascade: CascadeType = ['persist']) => {
+  const options: EdgeNodeConfig = deepmerge({
+    onChangeCascade: [],
+  }, { onChangeCascade: cascade });
   return (target: any, key: string) => {
     const { constructor } = target;
+    const toTarget = getNativeType(key, target);
     GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
-      schema.getEdgeDefinition(constructor).setTo(key, getNativeType(key, target), options);
+      schema.getEdgeDefinition(constructor).setTo(key, toTarget, options);
+      schema.getDocumentDefinition(toTarget).$toInEdges.push(schema.getDefinition(constructor) as EdgeDefinition);
     });
   };
 };

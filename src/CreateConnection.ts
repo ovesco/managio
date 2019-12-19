@@ -8,8 +8,9 @@ export interface ConnectionParameters {
   arangoConfig?: Config,
   models: Function[],
   database: string,
+  syncSchema?: boolean,
   auth?: {
-    type: "bearer" | "basic",
+    type: 'bearer' | 'basic',
     token?: string,
     username?: string,
     password?: string,
@@ -18,7 +19,7 @@ export interface ConnectionParameters {
 
 export const createConnection = async (params: ConnectionParameters) => {
   const database = new Database(params.arangoConfig);
-  const schema = await loadSchema(params);
+  const schema = loadSchema(params);
 
   if (params.auth) {
     if (params.auth.type === 'basic') database.useBasicAuth(params.auth.username, params.auth.password);
@@ -26,6 +27,6 @@ export const createConnection = async (params: ConnectionParameters) => {
   }
 
   const manager = new Manager(schema, database);
-  await updateArangoSchema(manager, params);
+  if (params.syncSchema === true) await updateArangoSchema(manager, params);
   return manager;
 };

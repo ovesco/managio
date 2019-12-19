@@ -1,7 +1,8 @@
 import AbstractType from './AbstractType';
+import { CascadeType } from '../../Types';
 
 export type EdgeNodeConfig = {
-  onDeleteRemoveOther: boolean,
+  onChangeCascade: CascadeType,
 };
 
 class EdgeNodeType extends AbstractType {
