@@ -63,6 +63,10 @@ class Example {
 @document('foos')
 class Foo {
 
+  constructor() {
+    this.swag = `Foo swag level: ${Math.round(Math.random() * 10000)}`;
+  }
+
   @key
   private key: number;
 
@@ -73,14 +77,19 @@ class Foo {
 @edge('fooExamples')
 class FooExample {
 
+  constructor(foo, example) {
+    this.foo = foo;
+    this.example = example;
+  }
+
   @key
   private key: number;
 
-  @from
-  private from: Foo;
+  @from()
+  private foo: Foo;
 
-  @to
-  private to: Example;
+  @to()
+  private example: Example;
 }
 
 const config = {
@@ -89,11 +98,15 @@ const config = {
 } as ConnectionParameters;
 
 createConnection(config).then(async (manager) => {
-  const foo = new Example(123, 'yoyo', true, new Boom('BOOOOOM'));
+  for (let i = 0; i < 100; i += 1) {
+    const example = new Example(i, 'yoyo', true, new Boom('BOOOOOM'));
+    const foo = new Foo();
+    const fooExample = new FooExample(foo, example);
+    manager.persist(fooExample);
+  }
   // manager.persist(foo);
   console.log(manager.schema.getDefinition(FooExample));
   const repo = manager.getRepository(Example);
-  console.log(await repo.find('23958'));
 });
 
 /*

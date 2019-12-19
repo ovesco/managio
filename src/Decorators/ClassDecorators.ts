@@ -9,6 +9,8 @@ import DocumentRepository from '../Repository/DocumentRepository';
 import EdgeRepository from '../Repository/EdgeRepository';
 import { getNativeType } from '../Schema/TypeMatcher';
 import { ClassType } from '../Types';
+import { EdgeOptions } from '../Schema/EdgeDefinition';
+import { EdgeNodeConfig } from '../Schema/Fields/EdgeNodeType';
 
 // eslint-disable-next-line
 export const document = (options: string | DocumentOptions) => {
@@ -30,12 +32,14 @@ export const document = (options: string | DocumentOptions) => {
   };
 };
 
-export const edge = (options: string | DocumentOptions) => {
+export const edge = (options: string | EdgeOptions) => {
 
   const collName = typeof options === 'string' ? options : options.collectionName;
-  const baseEdgeOptions: DocumentOptions = {
+  const baseEdgeOptions: EdgeOptions = {
     collectionName: collName,
     repositoryClass: EdgeRepository,
+    cascadeFrom: ['persist', 'attach'],
+    cascadeTo: ['persist', 'attach'],
   };
 
   const givenOptions = typeof options === 'string'
@@ -80,16 +84,28 @@ export const rev = (target: any, key: string) => {
   });
 };
 
-export const from = (target: any, key: string) => {
-  const { constructor } = target;
-  GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
-    schema.getEdgeDefinition(constructor).setFrom(key, getNativeType(key, target));
-  });
+export const from = (cascade: Array<string> = ['persist']) => {
+  const options: EdgeNodeConfig = {
+    onDeleteRemoveOther,
+  };
+
+  return (target: any, key: string) => {
+    const { constructor } = target;
+    GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
+      schema.getEdgeDefinition(constructor).setFrom(key, getNativeType(key, target), options);
+    });
+  };
 };
 
-export const to = (target: any, key: string) => {
-  const { constructor } = target;
-  GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
-    schema.getEdgeDefinition(constructor).setTo(key, getNativeType(key, target));
-  });
+export const to = (cascade: Array<string> = ['persist']) => {
+  const options: EdgeNodeConfig = {
+    cascade,
+  };
+
+  return (target: any, key: string) => {
+    const { constructor } = target;
+    GlobalRegistrer.getInstance().addColumnTask(constructor, (schema: Schema) => {
+      schema.getEdgeDefinition(constructor).setTo(key, getNativeType(key, target), options);
+    });
+  };
 };

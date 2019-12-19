@@ -1,8 +1,14 @@
-import DocumentDefinition from './DocumentDefinition';
+import DocumentDefinition, { DocumentOptions } from './DocumentDefinition';
 import EdgeNodeType from './Fields/EdgeNodeType';
 import Field from './Field';
 import Schema from './Schema';
 import InvalidSchemaDefinitionError from '../Errors/InvalidSchemaDefinitionError';
+import { CascadeType } from '../Types';
+
+export interface EdgeOptions extends DocumentOptions {
+  cascadeFrom: CascadeType,
+  cascadeTo: CascadeType,
+}
 
 class EdgeDefinition extends DocumentDefinition {
   private $from: Field<EdgeNodeType> = null;
@@ -28,12 +34,12 @@ class EdgeDefinition extends DocumentDefinition {
     return this.$to;
   }
 
-  setFrom(key: string, target: Function) {
-    this.$from = new Field(key, new EdgeNodeType(target));
+  setFrom(key: string, target: Function, options: object) {
+    this.$from = new Field(key, new EdgeNodeType(target, options));
   }
 
-  setTo(key: string, target: Function) {
-    this.$to = new Field(key, new EdgeNodeType(target));
+  setTo(key: string, target: Function, options: object) {
+    this.$to = new Field(key, new EdgeNodeType(target, options));
   }
 }
 

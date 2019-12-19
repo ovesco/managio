@@ -1,11 +1,15 @@
 import AbstractType from './AbstractType';
 
+export type EdgeNodeConfig = {
+  onDeleteRemoveOther: boolean,
+};
+
 class EdgeNodeType extends AbstractType {
   private keyProperty: string;
 
   private collectionName: string;
 
-  constructor(public readonly target: Function) {
+  constructor(public readonly target: Function, public readonly options) {
     super();
   }
 

@@ -1,5 +1,5 @@
 import DocumentDefinition, { DocumentOptions } from './DocumentDefinition';
-import EdgeDefinition from './EdgeDefinition';
+import EdgeDefinition, { EdgeOptions } from './EdgeDefinition';
 import { ClassType } from '../Types';
 
 class Schema {
@@ -27,7 +27,7 @@ class Schema {
     this.documents.set(className, new DocumentDefinition(className, collectionName, options));
   }
 
-  registerEdge(className: Function, collectionName: string, options: DocumentOptions) {
+  registerEdge(className: Function, collectionName: string, options: EdgeOptions) {
     this.edges.set(className, new EdgeDefinition(className, collectionName, options));
   }
 
