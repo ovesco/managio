@@ -1,4 +1,3 @@
-import Database from '../Wrapper/Database';
 import GlobalRegistrer from './GlobalRegistrer';
 import { ConnectionParameters } from '../CreateConnection';
 import EdgeDefinition from './EdgeDefinition';

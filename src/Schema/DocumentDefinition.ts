@@ -9,9 +9,9 @@ export interface DocumentOptions {
 
 class DocumentDefinition extends AbstractDefinition {
 
-  public readonly $fromInEdges: Array<EdgeDefinition> = [];
+  public readonly fromInEdges: Array<EdgeDefinition> = [];
 
-  public readonly $toInEdges: Array<EdgeDefinition> = [];
+  public readonly toInEdges: Array<EdgeDefinition> = [];
 
   get options(): DocumentOptions {
     return this.$options as DocumentOptions;

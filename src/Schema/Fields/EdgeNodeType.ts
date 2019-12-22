@@ -1,8 +1,6 @@
 import AbstractType from './AbstractType';
-import { CascadeType } from '../../Types';
 
 export type EdgeNodeConfig = {
-  onChangeCascade: CascadeType,
 };
 
 class EdgeNodeType extends AbstractType {
@@ -10,7 +8,7 @@ class EdgeNodeType extends AbstractType {
 
   private collectionName: string;
 
-  constructor(public readonly target: Function, public readonly options) {
+  constructor(public readonly target: Function, public readonly options: EdgeNodeConfig) {
     super();
   }
 

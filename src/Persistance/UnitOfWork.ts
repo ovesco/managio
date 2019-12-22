@@ -41,6 +41,7 @@ class UnitOfWork {
 
   async syncChangeSet() {
     const builder = new ChangeSetBuilder(this.manager.schema, this.identityMap);
+    return;
     const toInsert = [];
     const toUpdate = [];
     const toDelete = [];

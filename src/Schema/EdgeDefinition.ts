@@ -1,5 +1,5 @@
 import { DocumentOptions } from './DocumentDefinition';
-import EdgeNodeType from './Fields/EdgeNodeType';
+import EdgeNodeType, { EdgeNodeConfig } from './Fields/EdgeNodeType';
 import Field from './Field';
 import Schema from './Schema';
 import InvalidSchemaDefinitionError from '../Errors/InvalidSchemaDefinitionError';
@@ -9,6 +9,7 @@ import AbstractDefinition from './AbstractDefinition';
 export interface EdgeOptions extends DocumentOptions {
   cascadeFrom: CascadeType,
   cascadeTo: CascadeType,
+  selfDiscoverable: boolean,
 }
 
 class EdgeDefinition extends AbstractDefinition {
@@ -39,11 +40,11 @@ class EdgeDefinition extends AbstractDefinition {
     return this.$to;
   }
 
-  setFrom(key: string, target: Function, options: object) {
+  setFrom(key: string, target: Function, options: EdgeNodeConfig) {
     this.$from = new Field(key, new EdgeNodeType(target, options));
   }
 
-  setTo(key: string, target: Function, options: object) {
+  setTo(key: string, target: Function, options: EdgeNodeConfig) {
     this.$to = new Field(key, new EdgeNodeType(target, options));
   }
 }

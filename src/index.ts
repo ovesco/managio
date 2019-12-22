@@ -86,7 +86,7 @@ class FooExample {
   private key: number;
 
   @from()
-  private foo: Foo;
+  public foo: Foo;
 
   @to()
   private example: Example;
@@ -102,13 +102,13 @@ const config = {
 } as ConnectionParameters;
 
 createConnection(config).then(async (manager) => {
-  // for (let i = 0; i < 100; i += 1) {
-  const example = new Example(3, 'yoyo', true, new Boom('BOOOOOM'));
-  const foo = new Foo();
-  const fooExample = new FooExample(foo, example);
-    // manager.persist(fooExample);
-  // }
-  // manager.persist(foo);
+  for (let i = 0; i < 1; i += 1) {
+    const example = new Example(3, 'yoyo', true, new Boom('BOOOOOM'));
+    const foo = new Foo();
+    const fooExample = new FooExample(foo, example);
+    manager.persist(foo);
+  }
+  await manager.flush();
   // const repo = manager.getRepository(Example);
 });
 

@@ -1,10 +1,15 @@
 import 'reflect-metadata';
 
 import Schema from '../Schema/Schema';
-import UnitOfWork, { State } from './UnitOfWork';
-import EdgeDefinition, { EdgeOptions } from '../Schema/EdgeDefinition';
-import { cascadeOptions } from '../Types';
-import DocumentDefinition from "../Schema/DocumentDefinition";
+import { State } from './UnitOfWork';
+import EdgeDefinition from '../Schema/EdgeDefinition';
+
+enum cascadeOptions {
+  PERSIST = 'persist',
+  ATTACH = 'attach',
+  DETACH = 'detach',
+  REMOVE = 'remove',
+}
 
 class ChangeSetBuilder {
   private discoveredEntities: Map<object, State> = new Map();
@@ -12,6 +17,9 @@ class ChangeSetBuilder {
   constructor(private schema: Schema, private identityMap: Map<object, State>) {
     identityMap.forEach((state, item) => {
       this.discoverRelatedEntities(item, state);
+    });
+    this.discoveredEntities.forEach((state, item) => {
+      console.log(item.constructor.name);
     });
   }
 
@@ -21,9 +29,10 @@ class ChangeSetBuilder {
       const currentState = this.discoveredEntities.get(item);
       if (state === State.REMOVED && currentState === State.MANAGED) {
         this.discoveredEntities.set(item, State.REMOVED); // If marked for remove through cascading overrides managing
-      } else if (state === State.DETACHED) {
-        this.discoveredEntities.set(item, State.DETACHED); // Detached overrides everything
       }
+    }
+    if (state === State.DETACHED) {
+      this.discoveredEntities.set(item, State.DETACHED); // Detached overrides everything
     }
     if (definition instanceof EdgeDefinition) {
       // We're on an edge, check related nodes
@@ -31,18 +40,13 @@ class ChangeSetBuilder {
       const toItem = Reflect.get(item, definition.to.key);
 
       // Check edge cascading
-      const { cascadeFrom } = definition.options as EdgeOptions;
-      const { cascadeTo } = definition.options as EdgeOptions;
+      const { cascadeFrom } = definition.options;
+      const { cascadeTo } = definition.options;
       this.checkCascade(fromItem, cascadeFrom, state);
       this.checkCascade(toItem, cascadeTo, state);
-
-    } else {
-      // We're on a node, check if it has any edges
-      const fromEdges = (definition as DocumentDefinition).$fromInEdges;
-      const toEdges = (definition as DocumentDefinition).$toInEdges;
-      fromEdges.forEach((fromEdgeDef) => {
-        const { cascadeFrom } = fromEdgeDef.options;
-      });
+    }
+    if (!this.discoveredEntities.has(item)) {
+      this.discoveredEntities.set(item, state);
     }
   }
 

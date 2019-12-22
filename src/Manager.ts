@@ -9,6 +9,7 @@ import EdgeCollection from './Wrapper/EdgeCollection';
 import EdgeDefinition from './Schema/EdgeDefinition';
 import { emptyValue } from './Helpers';
 import DataRetriever from './Query/DataRetriever';
+import GlobalRegistrer from './Schema/GlobalRegistrer';
 
 class Manager {
 
@@ -23,6 +24,12 @@ class Manager {
     this.repositories = buildRepositories(this);
     this.retriever = new DataRetriever(this);
     this.unitOfWork = new UnitOfWork(this);
+    this.schema.documents.forEach((docDef) => {
+      GlobalRegistrer.getInstance().processPostProcessingTasks(docDef.constructor, this);
+    });
+    this.schema.edges.forEach((docDef) => {
+      GlobalRegistrer.getInstance().processPostProcessingTasks(docDef.constructor, this);
+    });
   }
 
   getCurrentUnitOfWork() {
