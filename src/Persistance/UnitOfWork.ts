@@ -41,11 +41,11 @@ class UnitOfWork {
 
   async syncChangeSet() {
     const builder = new ChangeSetBuilder(this.manager.schema, this.identityMap);
-    return;
+    const { discoveredEntitiesMap } = builder;
     const toInsert = [];
     const toUpdate = [];
     const toDelete = [];
-    this.computeChangeSet().forEach((changeSet) => {
+    this.computeChangeSet(discoveredEntitiesMap).forEach((changeSet) => {
       switch (changeSet.operation) {
         case Operation.INSERT:
           toInsert.push(changeSet);
@@ -85,25 +85,23 @@ class UnitOfWork {
 
   async applyInsert(insertChanges: ChangeSet[]) {
     // Perform batch operation to insert all data in correct collections
+    // First insert nodes then edges (because they might depend on nodes)
     const collWorks = UnitOfWork.groupByClassName(insertChanges);
-    const insertPromises: Array<Promise<{ changes: ChangeSet[], response: object[] }>> = [];
+    const insertPromises: Array<Promise<{ className: Function, number: number }>> = [];
     collWorks.forEach((currentChanges, className) => {
       const collection = this.manager.getWrappedCollection(className);
       insertPromises.push(new Promise((resolve) => {
         collection.save(currentChanges.map((it) => it.changedData)).then((response) => {
-          resolve({ changes: currentChanges, response });
+          currentChanges.forEach((change, i) => {
+            const { item } = change;
+            const itemResponse = response[i];
+            this.manager.retriever.reflectApplyArangoFields(itemResponse, item);
+          });
+          resolve({ className, number: currentChanges.length });
         });
       }));
     });
-    const insertResult = await Promise.all(insertPromises);
-    insertResult.forEach((collectionResult) => {
-      const { changes, response } = collectionResult;
-      changes.forEach((change: ChangeSet, i) => {
-        const { item } = change;
-        const itemResponse = response[i];
-        this.manager.retriever.reflectApplyArangoFields(itemResponse, item);
-      });
-    });
+    return Promise.all(insertPromises);
   }
 
   async applyDelete(deleteChanges: ChangeSet[]) {
@@ -126,9 +124,9 @@ class UnitOfWork {
     await Promise.all(deletePromises);
   }
 
-  computeChangeSet(): ChangeSet[] {
+  computeChangeSet(discoveredEntitiesMap: Map<object, State>): ChangeSet[] {
     const changeSet = [];
-    this.identityMap.forEach((state, item) => {
+    discoveredEntitiesMap.forEach((state, item) => {
       const definition = this.manager.schema.getDefinition(item.constructor);
       definition.validate(item);
       let operation;
@@ -162,9 +160,8 @@ class UnitOfWork {
       }
       // If its an edge
       if (definition instanceof EdgeDefinition) {
-        throw new Error('Not implemented yet');
-        // persistedData['_from'] = plainItem[definition.from.key];
-        // persistedData['_to'] = plainItem[definition.to.key];
+        persistedData['_from'] = plainItem[definition.from.key];
+        persistedData['_to'] = plainItem[definition.to.key];
       }
       changeSet.push(new ChangeSet(item, operation, persistedData));
     });

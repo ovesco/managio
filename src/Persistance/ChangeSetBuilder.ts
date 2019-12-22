@@ -18,12 +18,13 @@ class ChangeSetBuilder {
     identityMap.forEach((state, item) => {
       this.discoverRelatedEntities(item, state);
     });
-    this.discoveredEntities.forEach((state, item) => {
-      console.log(item.constructor.name);
-    });
   }
 
-  discoverRelatedEntities(item: object, state: State) {
+  get discoveredEntitiesMap() {
+    return this.discoveredEntities;
+  }
+
+  private discoverRelatedEntities(item: object, state: State) {
     const definition = this.schema.getDefinition(item.constructor);
     if (this.discoveredEntities.has(item)) {
       const currentState = this.discoveredEntities.get(item);
